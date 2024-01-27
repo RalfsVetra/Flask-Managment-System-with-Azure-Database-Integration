@@ -11,3 +11,6 @@ form {
 .form {
   max-width: 350px;
 }
+.height-100vh {
+  height: 100vh;
+}
