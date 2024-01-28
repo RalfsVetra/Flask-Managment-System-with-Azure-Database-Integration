@@ -32,17 +32,11 @@ def login():
         token = request.form['token']
 
         hash_password = password + SECRET_KEY
-        # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-        # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
         hashed_password = hashlib.sha256(hash_password.encode()).hexdigest()
-
-        # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-        # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
         connection = connect_to_database()
         cursor = connection.cursor()
-        cursor.execute('SELECT * FROM accounts WHERE username = ? AND password = ?', (username, password,))
+        cursor.execute('SELECT * FROM accounts WHERE username = ? AND password = ?', (username, hashed_password,))
 
         account = cursor.fetchone()
 
@@ -86,6 +80,71 @@ def login():
     session['token'] = token
 
     return render_template('auth/login.html', msg=msg, token=token, settings=settings)
+
+
+@auth.route('/register', methods=['GET', 'POST'])
+def register():
+    if logged_in():
+        return redirect(url_for('home.home'))
+
+    msg = ''
+    settings = get_settings()
+
+    if request.method == 'POST' and 'username' in request.form and 'password' in request.form and 'confirm_password' in request.form and 'email' in request.form:
+        username = request.form['username']
+        password = request.form['password']
+        confirm_password = request.form['confirm_password']
+        email = request.form['email']
+        role = 'Member'
+
+        hash_password = password + SECRET_KEY
+        hashed_password = hashlib.sha256(hash_password.encode()).hexdigest()
+
+        connection = connect_to_database()
+        cursor = connection.cursor()
+        cursor.execute('SELECT * FROM accounts WHERE username = ?', (username,))
+        account = cursor.fetchone()
+
+        if account:
+            return 'Already registered!'
+        elif not re.match(r'[^@]+@[^@]+\.[^@]+', email):
+            return 'Invalid email!'
+        elif not re.match(r'[A-Za-z0-9]+', username):
+            return 'Username must contain only characters and numbers!'
+        elif not username or not password or not confirm_password or not email:
+            return 'Please fill out the necessary information!'
+        elif password != confirm_password:
+            return 'Passwords do not match!'
+        elif len('username') < 5 or len('username') > 20:
+            return 'Username must contain at least 5 to 20 characters!'
+        elif len('password') < 5 or len('password') > 50:
+            return 'Password must contain at least 5 to 50 characters!'
+        else:
+            now = datetime.datetime.now()
+            now_format = now.strftime('%Y-%m-%d %H:%M:%S')
+
+            cursor.execute('INSERT INTO accounts (username, password, email, role, rememberme, registered, last_seen, ip) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+                           (username, hashed_password, email, role, '', now_format, now_format, request.environ['REMOTE_ADDR']))
+            connection.commit()
+
+            if settings['auto_login_after_register']['value'] == 'true':
+                session['logged_in'] = True
+
+                cursor.execute("SELECT @@IDENTITY AS last_id")
+                last_row = cursor.fetchone()
+                session['id'] = last_row['last_id']
+                session['username'] = username
+                session['role'] = role
+
+                return 'autologin'
+            return 'Registration successful!'
+    elif request.method == 'POST':
+        return 'Please fill out the necessary information2!'
+    return render_template('auth/register.html', msg=msg, settings=settings)
+
+
+
+
 
 
 def logged_in():
