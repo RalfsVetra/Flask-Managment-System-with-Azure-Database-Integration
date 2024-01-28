@@ -23,7 +23,8 @@ def login():
     if request.method == 'POST' and 'username' in request.form and 'password' in request.form and 'token' in request.form:
         login_attempts_res = login_attempts(False)
 
-        if settings['brute_force_protection']['value'] == 'true' and login_attempts_res and login_attempts_res['attempts_left'] <= 1:
+        if settings['brute_force_protection']['value'] == 'true' and login_attempts_res and login_attempts_res[
+            'attempts_left'] < 1:
             return 'You cannot login right now! Please try again later!'
 
         username = request.form['username']
@@ -31,8 +32,8 @@ def login():
         token = request.form['token']
 
         hash_password = password + SECRET_KEY
-        #!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-        #!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
         hashed_password = hashlib.sha256(hash_password.encode()).hexdigest()
 
@@ -46,17 +47,8 @@ def login():
         account = cursor.fetchone()
 
         if account:
-            if settings['account_activation']['value'] == 'true' and account['activation_code'] != 'activated' and account['activation_code'] != '':
-                return 'Please activate your account!'
-
             if settings['csrf_protection']['value'] == 'true' and str(token) != str(session['token']):
                 return 'Invalid token!'
-
-            if settings['twofactor_protection']['value'] == 'true' and account['ip'] != request.environ['REMOTE_ADDR']:
-                session['tfa_id'] = account['id']
-                session['tfa_email'] = account['email']
-
-                return 'tfa: twofactor'
 
             session['logged_in'] = True
             session['id'] = account['id']
@@ -85,7 +77,8 @@ def login():
         else:
             if settings['brute_force_protection']['value'] == 'true':
                 login_attempts_res = login_attempts()
-                return 'Incorrect username or password! You have ' + str(login_attempts_res['attempts_left']) + ' attempts remaining!'
+                return 'Incorrect username or password! You have ' + str(
+                    login_attempts_res['attempts_left']) + ' attempts remaining!'
             else:
                 return 'Incorrect username or password!'
 
@@ -137,29 +130,32 @@ def get_settings():
     return settingsTwo
 
 
-def login_attempts(update = True):
+def login_attempts(update=True):
     connection = connect_to_database()
     cursor = connection.cursor()
 
     ip = request.environ['REMOTE_ADDR']
-    now = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    now = datetime.datetime.now()
+    now_format = now.strftime('%Y-%m-%d %H:%M:%S')
 
     if update:
-        cursor.execute('INSERT INTO login_attempts (ip_address, `date`) VALUES (?, ?) ON DUPLICATE KEY UPDATE attempts_left = attempts_left - 1, `date` = VALUES(`date`)', (ip, str(now)))
+        from app.db import update_login_attempts
+        update_login_attempts(cursor, ip, now_format)
         connection.commit()
 
     cursor.execute('SELECT * FROM login_attempts WHERE ip_address = ?', (ip,))
     login_attempts = cursor.fetchone()
 
     if login_attempts:
-        expire = datetime.datetime.strptime(now, '%Y-%m-%d %H:%M:%S') + datetime.timedelta(days=1)
+        expire = now + datetime.timedelta(days=1)
 
-        if datetime.datetime.strptime(now, '%Y-%m-%d %H:%M:%S') > expire:
+        if now > expire:
             cursor.execute('DELETE FROM login_attempts WHERE ip_address = ?', (ip,))
             connection.commit()
             login_attempts = []
 
     return login_attempts
+
 
 @auth.route('/logout')
 def logout():
@@ -172,5 +168,3 @@ def logout():
     resp.set_cookie('rememberme', expires=0)
 
     return resp
-
-
