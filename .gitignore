@@ -111,6 +111,8 @@ docs/_build/
 !demos/database/data.db
 *.sqlite
 *.sqlite3
+.vs/
+.vs
 
 # Upload file
 demos/form/uploads/*
