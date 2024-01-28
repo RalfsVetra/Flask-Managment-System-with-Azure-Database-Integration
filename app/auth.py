@@ -60,14 +60,14 @@ def login():
             cursor.execute('DELETE FROM login_attempts WHERE ip_address = ?', (request.environ['REMOTE_ADDR'],))
             connection.commit()
 
-            if 'remember_me' in request.form:
+            if 'rememberme' in request.form:
                 rememberme_code = account['rememberme']
 
                 if not rememberme_code:
                     rememberme_code_hash = account['username'] + request.form['password'] + SECRET_KEY
                     rememberme_code = hashlib.sha256(rememberme_code_hash.encode()).hexdigest()
 
-                expires = datetime.datetime.utcnow() + datetime.timedelta(days=90)
+                expires = datetime.datetime.now() + datetime.timedelta(days=90)
                 resp = make_response('Success', 200)
                 resp.set_cookie('rememberme', rememberme_code, expires=expires)
 
@@ -94,11 +94,11 @@ def logged_in():
     cursor = connection.cursor()
 
     if 'logged_in' in session:
-        cursor.execute('UPDATE accounts SET last_seen = GETDATE() WHERE id = ?', (session['id'],))
+        cursor.execute('UPDATE accounts SET last_seen = ? WHERE id = ?', (datetime.datetime.utcnow(), session['id'],))
         connection.commit()
 
         return True
-    elif 'remember_me' in request.cookies:
+    elif 'rememberme' in request.cookies:
         cursor.execute('SELECT * FROM accounts WHERE rememberme = ?', (request.cookies['rememberme'],))
         account = cursor.fetchone()
 
@@ -154,6 +154,18 @@ def login_attempts(update = True):
             login_attempts = []
 
     return login_attempts
+
+@auth.route('/logout')
+def logout():
+    session.pop('logged_in', None)
+    session.pop('id', None)
+    session.pop('username', None)
+    session.pop('role', None)
+
+    resp = make_response(redirect(url_for('auth.login')))
+    resp.set_cookie('rememberme', expires=0)
+
+    return resp
 
 
 @auth.route('/home')
