@@ -1,6 +1,6 @@
-from flask import Flask, Blueprint, render_template, request, redirect, url_for, session, make_response
+from flask import Blueprint, render_template, request, redirect, url_for, session, make_response
 from dotenv import load_dotenv
-from .db import connect_to_database
+from app.db import connect_to_database
 from flask_mail import Mail, Message
 import re, uuid, hashlib, datetime, os, math, urllib, json
 
@@ -15,7 +15,7 @@ roles_list = ['Admin', 'Member']
 @auth.route('/login', methods=['POST', 'GET'])
 def login():
     if logged_in():
-        return redirect(url_for('auth.home'))
+        return redirect(url_for('home.home'))
 
     msg = ''
     settings = get_settings()
@@ -31,7 +31,13 @@ def login():
         token = request.form['token']
 
         hash_password = password + SECRET_KEY
+        #!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        #!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
         hashed_password = hashlib.sha256(hash_password.encode()).hexdigest()
+
+        # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
         connection = connect_to_database()
         cursor = connection.cursor()
@@ -166,12 +172,5 @@ def logout():
     resp.set_cookie('rememberme', expires=0)
 
     return resp
-
-
-@auth.route('/home')
-def home():
-    if logged_in():
-        return render_template('dashboards/admin.html', username=session['username'], role=session['role'])
-    return redirect(url_for('auth.login'))
 
 
