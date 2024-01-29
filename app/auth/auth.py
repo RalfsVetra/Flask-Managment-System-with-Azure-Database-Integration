@@ -19,8 +19,11 @@ roles_list = ['Admin', 'Member']
 
 @auth.route('/login', methods=['POST', 'GET'])
 def login():
+    if admin_loggedin():
+        return redirect(url_for('admin.admin'))
+
     if logged_in():
-        return redirect(url_for('home.home'))
+        return redirect(url_for('member.member'))
 
     msg = ''
     settings = get_settings()
@@ -90,7 +93,7 @@ def login():
 @auth.route('/register', methods=['GET', 'POST'])
 def register():
     if logged_in():
-        return redirect(url_for('home.home'))
+        return redirect(url_for('member.member'))
 
     msg = ''
     settings = get_settings()
