@@ -2,5 +2,141 @@
 {% block title %}Admin{% endblock %}
 
 {% block content %}
-<h1>{{ username }} {{ role }}</h1>
+
+<aside class="responsive-width-100 responsive-hidden">
+    <h1>Admin Panel</h1>
+    <a href="{{ url_for('admin.admin') }}"{{ ' class=selected' if selected == 'dashboard' else '' }}>Dashboard</a>
+</aside>
+
+<main class="responsive-width-100">
+    <header>
+        <a class="responsive-toggle" href="#">
+            <i class="fas fa-bars"></i>
+        </a>
+        <div class="space-between"></div>
+    </header>
+
+    <div class="dashboard">
+        <div class="content-block stat">
+            <div>
+                <h3>New Accounts (&lt;1 day)</h3>
+                <p>{{ "{:,}".format(accounts|length) }}</p>
+            </div>
+            <i class="fas fa-user-plus"></i>
+        </div>
+
+        <div class="content-block stat">
+            <div>
+                <h3>Total Accounts</h3>
+
+            </div>
+            <i class="fas fa-users"></i>
+        </div>
+
+        <div class="content-block stat">
+            <div>
+                <h3>Active Accounts (&lt;30 days)</h3>
+
+            </div>
+            <i class="fas fa-user-clock"></i>
+        </div>
+
+        <div class="content-block stat">
+            <div>
+                <h3>Inactive Accounts (&gt;30 days)</h3>
+
+            </div>
+            <i class="fas fa-user-clock"></i>
+        </div>
+    </div>
+
+<h2>New Accounts <span>(&lt;1 day)</span></h2>
+
+<div class="content-block">
+    <div class="table">
+        <table>
+            <thead>
+                <tr>
+                    <td>#</td>
+                    <td>Username</td>
+                    <td class="responsive-hidden">Email</td>
+                    <td class="responsive-hidden">Activation Code</td>
+                    <td class="responsive-hidden">Role</td>
+                    <td class="responsive-hidden">Registered Date</td>
+                    <td class="responsive-hidden">Last Seen</td>
+                    <td>Actions</td>
+                </tr>
+            </thead>
+            <tbody>
+                {% if not accounts: %}
+                <tr>
+                    <td colspan="8" style="text-align:center;">There are no newly registered accounts</td>
+                </tr>
+                {% endif %}
+                {% for account in accounts: %}
+                <tr>
+                    <td>{{ account['id'] }}</td>
+                    <td>{{ account['username'] }}</td>
+                    <td class="responsive-hidden">{{ account['email'] }}</td>
+                    <td class="responsive-hidden">{{ account['activation_code'] if account['activation_code'] else '--' }}</td>
+                    <td class="responsive-hidden">{{ account['role'] }}</td>
+                    <td class="responsive-hidden">{{ account['registered'] }}</td>
+                    <td class="responsive-hidden" title="{{ account['last_seen'] }}">{{ time_elapsed_string(account['last_seen']) }}</td>
+                    <td>
+
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<br><br>
+
+<h2>Active Accounts <span>(&lt;1 day)</span></h2>
+
+<div class="content-block">
+    <div class="table">
+        <table>
+            <thead>
+                <tr>
+                    <td>#</td>
+                    <td>Username</td>
+                    <td class="responsive-hidden">Email</td>
+                    <td class="responsive-hidden">Activation Code</td>
+                    <td class="responsive-hidden">Role</td>
+                    <td class="responsive-hidden">Registered Date</td>
+                    <td class="responsive-hidden">Last Seen</td>
+                    <td>Actions</td>
+                </tr>
+            </thead>
+            <tbody>
+                {% if not active_accounts: %}
+                <tr>
+                    <td colspan="8" style="text-align:center;">There are no active accounts</td>
+                </tr>
+                {% endif %}
+                {% for account in active_accounts: %}
+                <tr>
+                    <td>{{ account['id'] }}</td>
+                    <td>{{ account['username'] }}</td>
+                    <td class="responsive-hidden">{{ account['email'] }}</td>
+                    <td class="responsive-hidden">{{ account['activation_code'] if account['activation_code'] else '--' }}</td>
+                    <td class="responsive-hidden">{{ account['role'] }}</td>
+                    <td class="responsive-hidden">{{ account['registered'] }}</td>
+                    <td class="responsive-hidden" title="{{ account['last_seen'] }}">{{ time_elapsed_string(account['last_seen']) }}</td>
+                    <td>
+
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+</main>
+<script src="{{ url_for('static', filename='js/admin.js') }}"></script>
+
 {% endblock %}
