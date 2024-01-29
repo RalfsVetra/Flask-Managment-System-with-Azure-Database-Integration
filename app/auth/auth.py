@@ -1,8 +1,13 @@
-from flask import Blueprint, render_template, request, redirect, url_for, session, make_response
+import datetime
+import hashlib
+import os
+import re
+import uuid
+
 from dotenv import load_dotenv
+from flask import Blueprint, render_template, request, redirect, url_for, session, make_response
+
 from app.db import connect_to_database
-from flask_mail import Mail, Message
-import re, uuid, hashlib, datetime, os, math, urllib, json
 
 auth = Blueprint('auth', __name__)
 
@@ -14,8 +19,11 @@ roles_list = ['Admin', 'Member']
 
 @auth.route('/login', methods=['POST', 'GET'])
 def login():
+    if admin_loggedin():
+        return redirect(url_for('admin.admin'))
+
     if logged_in():
-        return redirect(url_for('home.home'))
+        return redirect(url_for('member.member'))
 
     msg = ''
     settings = get_settings()
@@ -85,7 +93,7 @@ def login():
 @auth.route('/register', methods=['GET', 'POST'])
 def register():
     if logged_in():
-        return redirect(url_for('home.home'))
+        return redirect(url_for('member.member'))
 
     msg = ''
     settings = get_settings()
@@ -143,8 +151,17 @@ def register():
     return render_template('auth/register.html', msg=msg, settings=settings)
 
 
+@auth.route('/logout')
+def logout():
+    session.pop('logged_in', None)
+    session.pop('id', None)
+    session.pop('username', None)
+    session.pop('role', None)
 
+    resp = make_response(redirect(url_for('auth.login')))
+    resp.set_cookie('rememberme', expires=0)
 
+    return resp
 
 
 def logged_in():
@@ -216,14 +233,7 @@ def login_attempts(update=True):
     return login_attempts
 
 
-@auth.route('/logout')
-def logout():
-    session.pop('logged_in', None)
-    session.pop('id', None)
-    session.pop('username', None)
-    session.pop('role', None)
-
-    resp = make_response(redirect(url_for('auth.login')))
-    resp.set_cookie('rememberme', expires=0)
-
-    return resp
+def admin_loggedin():
+    if logged_in() and session['role'] == 'Admin':
+        return True
+    return False

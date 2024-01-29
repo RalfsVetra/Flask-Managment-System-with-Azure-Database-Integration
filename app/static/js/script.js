@@ -10,7 +10,7 @@ const process_form = (ajax_form) => {
 
     fetch(ajax_form.action, { method: 'POST', body: form_data }).then(response => response.text()).then(result => {
         if (result.toLowerCase().includes('success')) {
-            window.location.href = 'home';
+            window.location.href = 'admin';
         } else if (result.includes('tfa:')) {
             window.location.href = result.replace('tfa: ', '');
         } else if (result.toLowerCase().includes('autologin')) {
