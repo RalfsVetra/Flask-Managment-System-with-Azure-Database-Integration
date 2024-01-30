@@ -2,5 +2,43 @@
 {% block title %}Member{% endblock %}
 
 {% block content %}
-{{ username }} {{ role }}
+<header role="banner" id="header" class="header ng-scope header--up header--at-top">
+      <div class="header__content header__sides">
+          <div class="header__nav">
+              <nav class="header__nav" role="navigation">
+                  <div class="header__nav__list">
+                      <div class="header__nav-item-wrapper">
+                          <a href="/" class="header__nav-item header__nav-item--active" >
+                              <span class="header__nav-item__text">
+                                  PDF Editor
+                              </span>
+                          </a>
+                      </div>
+                  </div>
+              </nav>
+          </div>
+
+          <div class="header__sides__aside header__user">
+              <a role="button" class="button" href="/logout">
+                  Logout
+              </a>
+          </div>
+      </div>
+  </header>
+
+<div class="sidebar">
+    <div class="sidebar__content">
+        <div class="sidebar__content-item sidebar-border">
+            <a href="/">Home</a>
+        </div>
+        <div class="sidebar__content-item">
+            <a href="#">View tasks</a>
+        </div>
+    </div>
+</div>
+
+<main class="content_content">
+    Welcome back, {{ username }}!
+</main>
+
 {% endblock %}

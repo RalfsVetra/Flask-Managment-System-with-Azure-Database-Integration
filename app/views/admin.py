@@ -26,27 +26,16 @@ def admin():
     accounts_total = cursor.fetchone()
 
     cursor.execute(
-        "SELECT COUNT(*) AS total FROM accounts WHERE last_seen < dateadd(month, -1, GETDATE())"
-    )
-    inactive_accounts_less_than_one_month = cursor.fetchone()
-
-    cursor.execute(
-        "SELECT * FROM accounts WHERE last_seen > dateadd(day, -1, GETDATE()) ORDER BY last_seen DESC"
+        "SELECT * FROM accounts"
     )
     active_accounts = cursor.fetchall()
-
-    cursor.execute(
-        "SELECT COUNT(*) AS total FROM accounts WHERE last_seen > dateadd(month, -1, GETDATE())"
-    )
-    inactive_accounts = cursor.fetchone()
 
     return render_template('dashboards/admin.html',
                            accounts=accounts,
                            selected='dashboard',
                            selected_child='view',
                            accounts_total=accounts_total['total'],
-                           inactive_accounts_less_than_one_month=inactive_accounts_less_than_one_month['total'],
-                           active_accounts=active_accounts, inactive_accounts=inactive_accounts['total'],
+                           active_accounts=active_accounts,
                            time_elapsed_string=time_elapsed_string)
 
 
