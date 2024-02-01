@@ -9,8 +9,10 @@ def create_app(config_class=Config):
     from app.auth.auth import auth
     from app.views.member import member_bp
     from app.views.admin import admin_bp
+    from app.views.employee import employee_bp
     app.register_blueprint(admin_bp, url_prefix='/')
     app.register_blueprint(auth, url_prefix='/')
     app.register_blueprint(member_bp, url_prefix='/')
+    app.register_blueprint(employee_bp, url_prefix='/')
 
     return app
